@@ -1,0 +1,3 @@
+# Enforced source of truth with automatic drift revert
+
+Changes reach the tenancy only through this repository: GitHub Actions plans on PRs and applies on merge to `main`. A scheduled plan detects drift and reverts it automatically, unless the plan would destroy or replace anything, in which case it opens an issue instead. We chose enforcement over a merely declarative repo because a source of truth that tolerates console edits stops being one; the destroy/replace guard keeps an unattended job from deleting things. Human administrators stay unmanaged break-glass identities so no apply can lock the owner out.
