@@ -15,7 +15,7 @@ An independently applied unit of configuration with its own state: `bootstrap`, 
 _Avoid_: stack, layer, workspace
 
 **Bootstrap**:
-The root holding what the pipeline needs before it can run (CI user, its policy, the state bucket); applied by hand.
+The root holding what the pipeline needs before it can run (apply user, plan user, their policies, the state bucket); applied by hand.
 
 **Foundation**:
 The root holding tenancy-wide structure: compartments, IAM, tagging, budgets, networking.
@@ -33,9 +33,13 @@ Applying `main` to erase drift; automatic only when the plan updates in place.
 A human administrator deliberately left unmanaged by this repository so a bad apply cannot lock it out.
 _Avoid_: admin user, root user
 
-**CI user**:
-The dedicated OCI user whose API key the pipeline uses to plan and apply.
-_Avoid_: service account, bot
+**Apply user**:
+The dedicated OCI user whose API key the pipeline uses to apply `main` and to run drift checks.
+_Avoid_: CI user, service account, bot
+
+**Plan user**:
+The dedicated OCI user whose API key pull-request plans use; it can read the tenancy but never change it.
+_Avoid_: read-only user, plan bot
 
 ### Compartments
 
