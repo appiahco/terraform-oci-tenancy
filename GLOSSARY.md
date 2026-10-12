@@ -27,7 +27,7 @@ The root holding resources that run things: compute, databases, clusters.
 Any difference between the tenancy and what `main` declares.
 
 **Revert**:
-Applying `main` to erase drift; automatic unless the plan destroys or replaces anything.
+Applying `main` to erase drift; automatic only when the plan updates in place.
 
 **Break-glass identity**:
 A human administrator deliberately left unmanaged by this repository so a bad apply cannot lock it out.
