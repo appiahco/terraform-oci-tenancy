@@ -1,0 +1,3 @@
+# Separate VCNs per environment joined by a DRG
+
+Production and Staging each get their own VCN, joined to a Platform VCN through a DRG whose route tables let each environment reach Platform but never each other. A single VCN with per-environment subnets was simpler, but would isolate environments only by security rules inside one network; separate VCNs give a routing-level boundary that later Security Zones can build on, at no extra cost. Egress (NAT, Service and Internet gateways) stays per Environment VCN rather than centralised through Platform, avoiding fragile transit routing that buys nothing at this scale.

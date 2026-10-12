@@ -50,3 +50,17 @@ _Avoid_: prod
 **Staging**:
 The compartment where changes are rehearsed before they reach Production.
 _Avoid_: dev, nonprod, test
+
+### Network
+
+**Platform VCN**:
+The network in Platform holding shared access paths; every Environment VCN can reach it.
+_Avoid_: hub
+
+**Environment VCN**:
+The network belonging to Production or Staging; it reaches the Platform VCN but never the other environment.
+_Avoid_: spoke
+
+**DRG**:
+The router joining the Platform VCN to each Environment VCN and deciding which may talk to which.
+_Avoid_: transit, gateway
