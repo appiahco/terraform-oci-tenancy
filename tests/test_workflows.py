@@ -42,7 +42,8 @@ class CredentialTests(unittest.TestCase):
 import json, os, sys
 with open(os.environ['FIXTURE_LOG'], 'a') as stream:
     stream.write(json.dumps({'args': sys.argv[1:], 'credentials': {k:v for k,v in os.environ.items() if k.startswith('OCI_')}}) + '\\n')
-if 'show' in sys.argv: print('{"resource_changes": []}')
+if 'output' in sys.argv: print('{}')
+elif 'show' in sys.argv: print('{"resource_changes": []}')
 else: print('fixture plan')
 ''')
             fake.chmod(0o755)
@@ -55,8 +56,8 @@ else: print('fixture plan')
             result = subprocess.run(command, shell=True, cwd=workspace, env=env | {'ROOT': 'bootstrap', 'MODE': 'plan'}, capture_output=True, text=True)
             self.assertEqual(result.returncode, 0, result.stderr)
             calls = [json.loads(line) for line in log.read_text().splitlines()]
-            self.assertEqual([c['args'][1] for c in calls], ['init', 'plan', 'show'])
-            self.assertIn('-lock=false', calls[1]['args'])
+            self.assertEqual([c['args'][1] for c in calls], ['init', 'output', 'plan', 'show'])
+            self.assertIn('-lock=false', calls[2]['args'])
             self.assertEqual([a for a in calls[0]['args'] if a.startswith('-backend-config=')], ['-backend-config=bucket=fixture-bucket', '-backend-config=namespace=fixture-namespace'])
             expected_credentials = credentials | {'OCI_' + k[4:].lower(): v for k, v in credentials.items()}
             self.assertTrue(all(c['credentials'] == expected_credentials for c in calls))

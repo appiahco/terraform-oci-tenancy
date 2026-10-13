@@ -23,6 +23,10 @@ permissions:
   contents: read
 jobs:
   preflight:
+    environment: plan
+    if: >-
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     outputs:
       available: ${{ steps.credentials.outputs.available }}
@@ -48,6 +52,7 @@ jobs:
         if: steps.credentials.outputs.available != 'true'
         run: echo 'Plan skipped because Plan user credentials are not configured.' >> "$GITHUB_STEP_SUMMARY"
   plan:
+    environment: plan
     needs: preflight
     if: >-
       needs.preflight.outputs.available == 'true' &&

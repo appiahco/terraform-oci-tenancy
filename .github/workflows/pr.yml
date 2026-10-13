@@ -67,7 +67,10 @@ jobs:
           python-version: '3.12'
       - run: python3 -m pip install -r tests/requirements.txt
       - run: python3 -m unittest discover -s tests -v
-      - run: node --test tests/plan-comment.test.mjs
+      - run: node --test tests/*.test.mjs
+      - run: bash -n scripts/bootstrap-wizard.sh
+      # Template library has SC1087 and unused-helper SC2329 diagnostics.
+      - run: shellcheck -e SC1087,SC2329 scripts/bootstrap-wizard.sh
   checkov:
     runs-on: ubuntu-latest
     continue-on-error: true
@@ -102,9 +105,3 @@ jobs:
     with:
       root: ${{ matrix.root }}
       mode: plan
-    secrets:
-      OCI_TENANCY_OCID: ${{ secrets.OCI_PLAN_TENANCY_OCID }}
-      OCI_USER_OCID: ${{ secrets.OCI_PLAN_USER_OCID }}
-      OCI_FINGERPRINT: ${{ secrets.OCI_PLAN_FINGERPRINT }}
-      OCI_PRIVATE_KEY: ${{ secrets.OCI_PLAN_PRIVATE_KEY }}
-      OCI_REGION: ${{ secrets.OCI_PLAN_REGION }}

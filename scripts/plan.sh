@@ -20,6 +20,11 @@ export OCI_region="$OCI_REGION"
 export TF_IN_AUTOMATION=true
 terraform -chdir="$root" init -input=false -lockfile=readonly \
   -backend-config="bucket=$TF_STATE_BUCKET" -backend-config="namespace=$TF_STATE_NAMESPACE"
+if [[ "$root" == bootstrap ]]; then
+  # First live Bootstrap plan follows owner migration. These inputs are public only.
+  terraform -chdir="$root" output -json bootstrap_inputs > "$root/ci.auto.tfvars.json"
+  trap 'rm -f "$root/ci.auto.tfvars.json"' EXIT
+fi
 terraform -chdir="$root" plan -input=false -no-color -lock=false -out=plan.tfplan > "$root/plan.txt" 2>&1 || {
   cat "$root/plan.txt"
   exit 1
