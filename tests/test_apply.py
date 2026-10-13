@@ -9,6 +9,17 @@ import unittest
 REPO = Path(__file__).resolve().parents[1]
 
 
+def apply_fixture_environment(workspace):
+    env = {k: v for k, v in os.environ.items() if not k.startswith(('OCI_', 'TF_', 'GITHUB_'))}
+    keys = ['OCI_TENANCY_OCID', 'OCI_USER_OCID', 'OCI_FINGERPRINT', 'OCI_PRIVATE_KEY',
+            'OCI_REGION', 'TF_STATE_BUCKET', 'TF_STATE_NAMESPACE']
+    return env | {k: 'fixture' for k in keys} | {
+        'PATH': str(workspace) + os.pathsep + env['PATH'],
+        'FIXTURE_LOG': str(workspace / 'calls'),
+        'GITHUB_REF': 'refs/heads/main', 'GITHUB_EVENT_NAME': 'push',
+    }
+
+
 class ApplyTests(unittest.TestCase):
     def test_main_replans_and_applies_identical_locked_plan(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -29,9 +40,7 @@ elif args[1] == 'apply':
     assert (root / args[-1]).read_text() == 'fixture authoritative main plan'
 ''')
             fake.chmod(0o755)
-            env = {k: v for k, v in os.environ.items() if not k.startswith(('OCI_', 'TF_', 'GITHUB_'))}
-            env |= {k: 'fixture' for k in ['OCI_TENANCY_OCID', 'OCI_USER_OCID', 'OCI_FINGERPRINT', 'OCI_PRIVATE_KEY', 'OCI_REGION', 'TF_STATE_BUCKET', 'TF_STATE_NAMESPACE']}
-            env |= {'PATH': tmp + os.pathsep + env['PATH'], 'FIXTURE_LOG': str(workspace / 'calls'), 'GITHUB_REF': 'refs/heads/main', 'GITHUB_EVENT_NAME': 'push'}
+            env = apply_fixture_environment(workspace)
             for failure in [False, True]:
                 with self.subTest(plan_failure=failure):
                     log = workspace / 'calls'
@@ -72,9 +81,10 @@ else:
     print(json.dumps({'data': {'inherited-by-compartments': ['fixture-edge'] if included else []}}))
 ''')
             fake.chmod(0o755)
-            env = {k: v for k, v in os.environ.items() if not k.startswith(('OCI_', 'GITHUB_'))}
-            env |= {k: 'fixture' for k in ['OCI_TENANCY_OCID','OCI_USER_OCID','OCI_FINGERPRINT','OCI_PRIVATE_KEY','OCI_REGION']}
-            env |= {'PATH': tmp + os.pathsep + env['PATH'], 'FIXTURE_LOG': str(workspace / 'calls'), 'FIXTURE_STATE': str(workspace / 'state'), 'SECURITY_ZONE_ID': 'fixture-zone', 'EDGE_COMPARTMENT_ID': 'fixture-edge', 'GITHUB_REF': 'refs/heads/main', 'GITHUB_EVENT_NAME': 'push'}
+            env = apply_fixture_environment(workspace) | {
+                'FIXTURE_STATE': str(workspace / 'state'),
+                'SECURITY_ZONE_ID': 'fixture-zone', 'EDGE_COMPARTMENT_ID': 'fixture-edge',
+            }
             for case in ['new', 'already_excluded', 'remove_failure', 'verify_failure']:
                 with self.subTest(case=case):
                     log=workspace / 'calls'; log.unlink(missing_ok=True)
