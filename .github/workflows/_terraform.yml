@@ -1,0 +1,94 @@
+name: Terraform Root
+on:
+  workflow_call:
+    inputs:
+      root:
+        required: true
+        type: string
+      mode:
+        required: true
+        type: string
+    secrets:
+      OCI_TENANCY_OCID:
+        required: false
+      OCI_USER_OCID:
+        required: false
+      OCI_FINGERPRINT:
+        required: false
+      OCI_PRIVATE_KEY:
+        required: false
+      OCI_REGION:
+        required: false
+permissions:
+  contents: read
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    outputs:
+      available: ${{ steps.credentials.outputs.available }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate execution contract
+        env:
+          ROOT: ${{ inputs.root }}
+          MODE: ${{ inputs.mode }}
+        run: |
+          case "$ROOT" in bootstrap|foundation|workloads) ;; *) exit 1;; esac
+          case "$MODE" in plan|apply) ;; *) exit 1;; esac
+          if [ "$MODE" = apply ]; then echo 'Apply is reserved for #25'; exit 1; fi
+      - id: credentials
+        env:
+          OCI_TENANCY_OCID: ${{ secrets.OCI_TENANCY_OCID }}
+          OCI_USER_OCID: ${{ secrets.OCI_USER_OCID }}
+          OCI_FINGERPRINT: ${{ secrets.OCI_FINGERPRINT }}
+          OCI_PRIVATE_KEY: ${{ secrets.OCI_PRIVATE_KEY }}
+          OCI_REGION: ${{ secrets.OCI_REGION }}
+        run: python3 scripts/ci.py credentials
+      - name: Explain missing credentials
+        if: steps.credentials.outputs.available != 'true'
+        run: echo 'Plan skipped because Plan user credentials are not configured.' >> "$GITHUB_STEP_SUMMARY"
+  plan:
+    needs: preflight
+    if: >-
+      needs.preflight.outputs.available == 'true' &&
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    concurrency:
+      group: terraform-${{ inputs.root }}-pr-${{ github.event.pull_request.number }}
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v4
+      - id: version
+        run: echo "version=$(cat .terraform-version)" >> "$GITHUB_OUTPUT"
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ steps.version.outputs.version }}
+          terraform_wrapper: false
+      - name: Plan with the Plan user
+        env:
+          ROOT: ${{ inputs.root }}
+          MODE: ${{ inputs.mode }}
+          TF_STATE_BUCKET: ${{ vars.TF_STATE_BUCKET }}
+          TF_STATE_NAMESPACE: ${{ vars.TF_STATE_NAMESPACE }}
+          OCI_TENANCY_OCID: ${{ secrets.OCI_TENANCY_OCID }}
+          OCI_USER_OCID: ${{ secrets.OCI_USER_OCID }}
+          OCI_FINGERPRINT: ${{ secrets.OCI_FINGERPRINT }}
+          OCI_PRIVATE_KEY: ${{ secrets.OCI_PRIVATE_KEY }}
+          OCI_REGION: ${{ secrets.OCI_REGION }}
+        run: bash scripts/plan.sh "$ROOT" "$MODE"
+      - name: Update Root comment
+        uses: actions/github-script@v7
+        env:
+          ROOT: ${{ inputs.root }}
+        with:
+          script: |
+            const { readFile } = require('node:fs/promises');
+            const { updateComment } = await import(`${process.env.GITHUB_WORKSPACE}/scripts/plan-comment.mjs`);
+            const root = process.env.ROOT;
+            await updateComment({ github, context, root,
+              plan: JSON.parse(await readFile(`${root}/plan.json`, 'utf8')),
+              text: await readFile(`${root}/plan.txt`, 'utf8') });

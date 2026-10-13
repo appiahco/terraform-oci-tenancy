@@ -1,0 +1,33 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended"
+  ],
+  "enabledManagers": [
+    "terraform",
+    "terraform-version",
+    "github-actions",
+    "custom.regex"
+  ],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^\\.tflint\\.hcl$/"
+      ],
+      "matchStrings": [
+        "version\\s*=\\s*\"(?<currentValue>[^\"]+)\"\\s*source\\s*=\\s*\"github.com/(?<depName>[^\"]+)\""
+      ],
+      "datasourceTemplate": "github-releases"
+    }
+  ],
+  "packageRules": [
+    {
+      "matchManagers": [
+        "terraform",
+        "terraform-version"
+      ],
+      "groupName": "Terraform execution contract"
+    }
+  ]
+}
