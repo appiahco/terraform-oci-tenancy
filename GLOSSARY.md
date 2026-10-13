@@ -59,6 +59,14 @@ _Avoid_: dev, nonprod, test
 The compartment owned by Bootstrap holding only the pipeline's state; the CI user cannot touch anything else in it.
 _Avoid_: state compartment
 
+**Edge compartment**:
+The subcompartment of an environment holding its only public-facing resources (the public load-balancer subnet and its load balancers).
+_Avoid_: DMZ, public compartment
+
+**Security Zone**:
+An Oracle-enforced set of policies attached to a compartment that refuses to create resources breaking them; Production has one, its Edge compartment is excluded.
+_Avoid_: guardrail, zone policy
+
 ### Network
 
 **Platform VCN**:
