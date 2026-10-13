@@ -16,7 +16,7 @@ provider "oci" {
   ignore_defined_tags = ["Oracle-Tags.CreatedBy", "Oracle-Tags.CreatedOn"]
 }
 
-# Execution contract only: infrastructure is delivered in subsequent tickets.
+# Foundation owns governance; networking and the remaining baseline arrive separately.
 output "root_contract" {
   description = "Exclusive ownership boundary; not a dependency on deployed outputs."
   value = {

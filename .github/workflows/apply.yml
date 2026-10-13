@@ -1,0 +1,38 @@
+name: Merge apply
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'foundation/**'
+      - 'workloads/**'
+      - 'modules/**'
+      - 'scripts/**'
+      - '.github/workflows/**'
+      - '.terraform-version'
+permissions:
+  contents: read
+jobs:
+  foundation:
+    uses: ./.github/workflows/_terraform.yml
+    secrets:
+      OCI_TENANCY_OCID: ${{ secrets.OCI_TENANCY_OCID }}
+      OCI_USER_OCID: ${{ secrets.OCI_USER_OCID }}
+      OCI_FINGERPRINT: ${{ secrets.OCI_FINGERPRINT }}
+      OCI_PRIVATE_KEY: ${{ secrets.OCI_PRIVATE_KEY }}
+      OCI_REGION: ${{ secrets.OCI_REGION }}
+    with:
+      root: foundation
+      mode: apply
+  workloads:
+    needs: foundation
+    if: needs.foundation.result == 'success'
+    uses: ./.github/workflows/_terraform.yml
+    secrets:
+      OCI_TENANCY_OCID: ${{ secrets.OCI_TENANCY_OCID }}
+      OCI_USER_OCID: ${{ secrets.OCI_USER_OCID }}
+      OCI_FINGERPRINT: ${{ secrets.OCI_FINGERPRINT }}
+      OCI_PRIVATE_KEY: ${{ secrets.OCI_PRIVATE_KEY }}
+      OCI_REGION: ${{ secrets.OCI_REGION }}
+    with:
+      root: workloads
+      mode: apply

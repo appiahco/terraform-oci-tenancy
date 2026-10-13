@@ -1,0 +1,322 @@
+[
+  {
+    "display_name": "deny instance_without_sanctioned_image",
+    "id": "fixture-policy-0"
+  },
+  {
+    "display_name": "deny instance_in_security_zone_in_subnet_not_in_security_zone",
+    "id": "fixture-policy-1"
+  },
+  {
+    "display_name": "deny block_volume_in_security_zone_attach_to_instance_not_in_security_zone",
+    "id": "fixture-policy-2"
+  },
+  {
+    "display_name": "deny block_volume_not_in_security_zone_attach_to_instance_in_security_zone",
+    "id": "fixture-policy-3"
+  },
+  {
+    "display_name": "deny boot_volume_in_security_zone_attach_to_instance_not_in_security_zone",
+    "id": "fixture-policy-4"
+  },
+  {
+    "display_name": "deny boot_volume_not_in_security_zone_attach_to_instance_in_security_zone",
+    "id": "fixture-policy-5"
+  },
+  {
+    "display_name": "deny instance_in_security_zone_launch_from_boot_volume_not_in_security_zone",
+    "id": "fixture-policy-6"
+  },
+  {
+    "display_name": "deny instance_not_in_security_zone_launch_from_boot_volume_in_security_zone",
+    "id": "fixture-policy-7"
+  },
+  {
+    "display_name": "deny instance_in_security_zone_move_to_compartment_not_in_security_zone",
+    "id": "fixture-policy-8"
+  },
+  {
+    "display_name": "deny instance_not_in_security_zone_move_to_compartment_in_security_zone",
+    "id": "fixture-policy-9"
+  },
+  {
+    "display_name": "deny block_volume_without_vault_key",
+    "id": "fixture-policy-10"
+  },
+  {
+    "display_name": "deny boot_volume_without_vault_key",
+    "id": "fixture-policy-11"
+  },
+  {
+    "display_name": "deny attached_block_volume_not_in_security_zone_move_to_compartment_in_security_zone",
+    "id": "fixture-policy-12"
+  },
+  {
+    "display_name": "deny attached_boot_volume_not_in_security_zone_move_to_compartment_in_security_zone",
+    "id": "fixture-policy-13"
+  },
+  {
+    "display_name": "deny block_volume_in_security_zone_move_to_compartment_not_in_security_zone",
+    "id": "fixture-policy-14"
+  },
+  {
+    "display_name": "deny boot_volume_in_security_zone_move_to_compartment_not_in_security_zone",
+    "id": "fixture-policy-15"
+  },
+  {
+    "display_name": "deny public_subnets",
+    "id": "fixture-policy-16"
+  },
+  {
+    "display_name": "deny internet_gateway",
+    "id": "fixture-policy-17"
+  },
+  {
+    "display_name": "deny subnet_in_security_zone_move_to_compartment_not_in_security_zone",
+    "id": "fixture-policy-18"
+  },
+  {
+    "display_name": "deny public_buckets",
+    "id": "fixture-policy-19"
+  },
+  {
+    "display_name": "deny buckets_without_vault_key",
+    "id": "fixture-policy-20"
+  },
+  {
+    "display_name": "deny bucket_in_security_zone_move_to_compartment_not_in_security_zone",
+    "id": "fixture-policy-21"
+  },
+  {
+    "display_name": "deny db_instance_public_access",
+    "id": "fixture-policy-22"
+  },
+  {
+    "display_name": "deny database_without_backup",
+    "id": "fixture-policy-23"
+  },
+  {
+    "display_name": "deny database_not_in_security_zone_create_from_backup_in_security_zone",
+    "id": "fixture-policy-24"
+  },
+  {
+    "display_name": "deny db_instance_move_to_compartment_not_in_security_zone",
+    "id": "fixture-policy-25"
+  },
+  {
+    "display_name": "deny database_with_dataguard_association_move_to_compartment_in_security_zone",
+    "id": "fixture-policy-26"
+  },
+  {
+    "display_name": "deny dataguard_association_with_db_instances_not_in_security_zones",
+    "id": "fixture-policy-27"
+  },
+  {
+    "display_name": "deny db_instance_subnet_not_in_security_zone",
+    "id": "fixture-policy-28"
+  },
+  {
+    "display_name": "deny database_in_security_zone_create_clone_not_in_security_zone",
+    "id": "fixture-policy-29"
+  },
+  {
+    "display_name": "deny free_database_creation",
+    "id": "fixture-policy-30"
+  },
+  {
+    "display_name": "deny db_resource_association_not_in_security_zone",
+    "id": "fixture-policy-31"
+  },
+  {
+    "display_name": "deny file_system_without_vault_key",
+    "id": "fixture-policy-32"
+  },
+  {
+    "display_name": "deny file_system_in_security_zone_move_to_compartment_not_in_security_zone",
+    "id": "fixture-policy-33"
+  },
+  {
+    "display_name": "deny mount_target_in_security_zone_move_to_compartment_not_in_security_zone",
+    "id": "fixture-policy-34"
+  },
+  {
+    "display_name": "deny mount_target_in_security_zone_create_with_subnet_not_in_security_zone",
+    "id": "fixture-policy-35"
+  },
+  {
+    "display_name": "deny file_system_in_security_zone_export_via_mount_target_not_in_security_zone",
+    "id": "fixture-policy-36"
+  },
+  {
+    "display_name": "deny file_system_not_in_security_zone_export_via_mount_target_in_security_zone",
+    "id": "fixture-policy-37"
+  },
+  {
+    "display_name": "deny mount_target_not_in_security_zone_create_with_subnet_in_security_zone",
+    "id": "fixture-policy-38"
+  },
+  {
+    "display_name": "deny file_system_in_security_zone_clone_to_compartment_not_in_security_zone",
+    "id": "fixture-policy-39"
+  },
+  {
+    "display_name": "deny public_load_balancer",
+    "id": "fixture-policy-40"
+  },
+  {
+    "display_name": "deny update_local_peering_gateway",
+    "id": "fixture-policy-41"
+  },
+  {
+    "display_name": "deny update_DHCP_options",
+    "id": "fixture-policy-42"
+  },
+  {
+    "display_name": "deny detach_volume",
+    "id": "fixture-policy-43"
+  },
+  {
+    "display_name": "deny delete_certificate_authority",
+    "id": "fixture-policy-44"
+  },
+  {
+    "display_name": "deny network_security_group_with_unsecure_ingress_rule",
+    "id": "fixture-policy-45"
+  },
+  {
+    "display_name": "deny update_network_security_group_egress_rules",
+    "id": "fixture-policy-46"
+  },
+  {
+    "display_name": "deny revoke_certificate_authority_version",
+    "id": "fixture-policy-47"
+  },
+  {
+    "display_name": "deny security_list_to_allow_traffic_to_restricted_port",
+    "id": "fixture-policy-48"
+  },
+  {
+    "display_name": "deny delete_VCN",
+    "id": "fixture-policy-49"
+  },
+  {
+    "display_name": "deny update_vcn_security_list_egress_rules",
+    "id": "fixture-policy-50"
+  },
+  {
+    "display_name": "deny update_vcn_security_list_ingress_rules",
+    "id": "fixture-policy-51"
+  },
+  {
+    "display_name": "deny load_balancer_with_weak_SSL_communication",
+    "id": "fixture-policy-52"
+  },
+  {
+    "display_name": "deny update_route_table",
+    "id": "fixture-policy-53"
+  },
+  {
+    "display_name": "deny update_network_security_group_ingress_rules",
+    "id": "fixture-policy-54"
+  },
+  {
+    "display_name": "deny delete_vcn_security_list",
+    "id": "fixture-policy-55"
+  },
+  {
+    "display_name": "deny delete_network_security_group",
+    "id": "fixture-policy-56"
+  },
+  {
+    "display_name": "deny cloud_shell_public_network",
+    "id": "fixture-policy-57"
+  },
+  {
+    "display_name": "deny manage_file_storage_resource",
+    "id": "fixture-policy-58"
+  },
+  {
+    "display_name": "deny manage_compute_and_block_storage_resource",
+    "id": "fixture-policy-59"
+  },
+  {
+    "display_name": "deny manage_DNS_resource",
+    "id": "fixture-policy-60"
+  },
+  {
+    "display_name": "deny manage_virtual_network_resource",
+    "id": "fixture-policy-61"
+  },
+  {
+    "display_name": "deny SGW_gateway",
+    "id": "fixture-policy-62"
+  },
+  {
+    "display_name": "deny NAT_gateway",
+    "id": "fixture-policy-63"
+  },
+  {
+    "display_name": "deny create_vcn_security_list",
+    "id": "fixture-policy-64"
+  },
+  {
+    "display_name": "deny create_or_modify_vcn_security_list",
+    "id": "fixture-policy-65"
+  },
+  {
+    "display_name": "deny terminate_instance",
+    "id": "fixture-policy-66"
+  },
+  {
+    "display_name": "deny delete_all_load_balancer_back_end_sets",
+    "id": "fixture-policy-67"
+  },
+  {
+    "display_name": "deny manage_image_resource",
+    "id": "fixture-policy-68"
+  },
+  {
+    "display_name": "deny LPG_gateway",
+    "id": "fixture-policy-69"
+  },
+  {
+    "display_name": "deny manage_vcn_route_tables",
+    "id": "fixture-policy-70"
+  },
+  {
+    "display_name": "deny manage_DHCP_options_resource",
+    "id": "fixture-policy-71"
+  },
+  {
+    "display_name": "deny manage_oke_service",
+    "id": "fixture-policy-72"
+  },
+  {
+    "display_name": "deny manage_bastion_resource",
+    "id": "fixture-policy-73"
+  },
+  {
+    "display_name": "deny DRG_gateway",
+    "id": "fixture-policy-74"
+  },
+  {
+    "display_name": "deny create_drg",
+    "id": "fixture-policy-75"
+  },
+  {
+    "display_name": "deny model_deploy_public_network",
+    "id": "fixture-policy-76"
+  },
+  {
+    "display_name": "deny job_manage_egress_network",
+    "id": "fixture-policy-77"
+  },
+  {
+    "display_name": "deny notebook_public_network",
+    "id": "fixture-policy-78"
+  },
+  {
+    "display_name": "deny pipeline_manage_egress_network",
+    "id": "fixture-policy-79"
+  }
+]

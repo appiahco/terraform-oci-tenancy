@@ -28,12 +28,15 @@ def summary(*lines):
 
 
 def credentials():
-    """Decide whether the live plan may run; report names only, never values."""
+    """Enforce the shared credential contract; report names only, never values."""
+    applying = os.getenv('MODE') == 'apply'
+    role = 'Apply' if applying else 'Plan'
+    environment = 'apply-' + os.getenv('ROOT', 'foundation') if applying else 'plan'
     missing = [key for key in CREDENTIALS + STATE_VARIABLES if not os.getenv(key, '').strip()]
     if not missing:
         output('available', 'true')
         return
-    if all(key in missing for key in STATE_VARIABLES) and any(key in missing for key in CREDENTIALS):
+    if not applying and all(key in missing for key in STATE_VARIABLES) and any(key in missing for key in CREDENTIALS):
         output('available', 'false')
         summary('### Live plan skipped: initial setup not complete',
                 'Plan credentials and backend variables are not configured, so **no live plan ran** and',
@@ -41,11 +44,11 @@ def credentials():
                 'Missing: ' + ', '.join(f'`{key}`' for key in missing))
         return
     names = ', '.join(missing)
-    print(f'::error title=Plan setup incomplete::Setup is complete but required inputs are missing or empty: {names}', file=sys.stderr)
-    summary('### Live plan failed: required input missing or empty',
-            'Setup is complete (backend variables or all credentials exist), so every Plan credential and backend variable is required.',
+    print(f'::error title={role} setup incomplete::Required inputs are missing or empty: {names}', file=sys.stderr)
+    summary(f'### Live {role.lower()} failed: required input missing or empty',
+            f'Every {role} credential and backend variable is required for configured plans and all applies.',
             'Missing or empty: ' + ', '.join(f'`{key}`' for key in missing),
-            'Restore them in the `plan` Environment (secrets) or repository variables, then re-run.')
+            f'Restore them in the `{environment}` Environment (secrets) or repository variables, then re-run.')
     output('available', 'false')
     sys.exit(1)
 
