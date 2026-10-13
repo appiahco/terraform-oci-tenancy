@@ -67,8 +67,12 @@ for plan in plans:
             (Path(tmp) / 'scripts').symlink_to(Path('scripts').resolve())
             graph = subprocess.run(['terraform', f'-chdir={directory}', 'graph', '-type=plan'],
                                    check=True, capture_output=True, text=True).stdout
-        dependency = '"[root] oci_cloud_guard_security_zone.production (expand)" -> "[root] oci_cloud_guard_cloud_guard_configuration.tenancy (expand)"'
-        assert dependency in graph, 'Production Security Zone must explicitly depend on Cloud Guard enablement'
+        # Terraform reduces redundant edges: zone -> recipe -> enablement
+        # represents the zone's dependency after adding the recipe dependency.
+        dependency = '"[root] oci_cloud_guard_security_zone.production (expand)" -> "[root] oci_cloud_guard_security_recipe.production (expand)"'
+        assert dependency in graph, 'Production Security Zone must wait for its recipe and Cloud Guard enablement'
+        recipe_dependency = '"[root] oci_cloud_guard_security_recipe.production (expand)" -> "[root] oci_cloud_guard_cloud_guard_configuration.tenancy (expand)"'
+        assert recipe_dependency in graph, 'Production recipe must explicitly depend on Cloud Guard enablement'
         zone = resources['oci_cloud_guard_security_zone.production']
         assert zone['compartment_id'] == 'fixture-production' and zone['security_zone_recipe_id'] == 'fixture-recipe'
         exclusion = resources['terraform_data.production_edge_exclusion']['input']

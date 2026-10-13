@@ -26,6 +26,7 @@ resource "oci_cloud_guard_security_recipe" "production" {
   description       = "Reviewed explicit policies; gateways and Vault keys excluded."
   defined_tags      = local.environment_tags["production"]
   security_policies = [for name in local.production_policy_names : local.policy_ids_by_name[name]]
+  depends_on        = [oci_cloud_guard_cloud_guard_configuration.tenancy]
 }
 
 resource "oci_cloud_guard_security_zone" "production" {
