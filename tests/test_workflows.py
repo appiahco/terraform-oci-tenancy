@@ -82,6 +82,19 @@ class CredentialTests(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertNotIn('available=true', output)
 
+    def test_full_credentials_without_state_variables_fail_rather_than_skip(self):
+        result, output, _ = self.run_preflight(**{k: 'fixture-only' for k in CREDENTIALS})
+        self.assertNotEqual(result.returncode, 0)
+        self.assertNotIn('available=true', output)
+        self.assertIn('TF_STATE_BUCKET', result.stderr)
+
+    def test_skipped_live_plans_are_explained_in_the_run_summary(self):
+        detect = yaml.safe_load((REPO / '.github/workflows/pr.yml').read_text())['jobs']['detect']
+        step = next(s for s in detect['steps'] if s.get('name') == 'Explain live plan scope')
+        self.assertIn('fork pull request', step['run'])
+        self.assertIn('not verified', step['run'])
+        self.assertIn('no Root affected', step['run'])
+
     def test_unconfigured_setup_skips_visibly_and_never_claims_verification(self):
         for env in [{}, {k: 'fixture-only' for k in CREDENTIALS[:3]}, {k: ' ' for k in INPUTS}]:
             with self.subTest(env=sorted(env)):
