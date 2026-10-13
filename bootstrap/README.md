@@ -12,14 +12,14 @@ Install Terraform from `.terraform-version`, OCI CLI, OpenSSL, GitHub CLI, and P
 
 ## Confirmed value inventory
 
-The owner confirmed this ordered inventory before stages were authored. All local procedure files are under ignored `.bootstrap/`, with a private directory and mode-0600 configuration/key files. Public identifiers are stored as GitHub secrets where workflows require them. Private PEM contents never go into dotenv, tfvars, backend configuration, Terraform outputs, plans or state.
+The owner confirmed this ordered inventory before stages were authored, including the later addition of distinct pipeline primary emails. All local procedure files are under ignored `.bootstrap/`, with a private directory and mode-0600 configuration/key files. Public identifiers are stored as GitHub secrets where workflows require them. Private PEM contents never go into dotenv, tfvars, backend configuration, Terraform outputs, plans or state.
 
 | Stage | Source → destination | Classification |
 | --- | --- | --- |
 | 1. Tenancy/repository | OCI Tenancy details: `TENANCY_OCID`, `HOME_REGION`; GitHub: `GITHUB_REPOSITORY`, `OWNER_LOGIN` → `.bootstrap/wizard.env`; tenancy and region also → public tfvars | Public identifiers |
 | 2. Owner session/MFA | `oci session authenticate`: profile/config path → wizard env; session token and session private key → OCI CLI files only | Credentials secret; profile/path public |
 | 3. Local pipeline keys | OpenSSL → `.bootstrap/keys/{apply,plan}.pem` and `.public.pem`; fingerprints → wizard env | Private PEM secret; public PEM/fingerprint public |
-| 4. Public inputs | Owner-chosen bucket name and owner-session namespace lookup → wizard env and `.bootstrap/root/owner.auto.tfvars.json` | Public |
+| 4. Public inputs | Owner-chosen bucket name, owner-session namespace lookup, and two distinct owner-controlled primary emails (`APPLY_USER_EMAIL`, `PLAN_USER_EMAIL`) → wizard env and `.bootstrap/root/owner.auto.tfvars.json`; emails also appear in state/plans and `bootstrap_inputs` for CI | Non-credential values |
 | 5. Manual apply | Terraform `setup` output: compartment/user IDs, bucket/namespace, group/policy IDs → `.bootstrap/setup.json`; compartment/user IDs also → wizard env | Public |
 | 6. Authorization | Owner real permission probes → owner evidence/checklist; verified `IAM_EXCLUSION_MODE` → wizard env/public tfvars | Public evidence; never record credentials |
 | 7. Migration | Bucket/namespace → `.bootstrap/backend.hcl`; key is fixed in each Root's backend | Public; state sensitive |
@@ -124,3 +124,9 @@ Owner checklist (complete after merge):
 Do not close #24 based on script existence or mock success.
 
 Checkov exceptions are scoped to the state bucket: `CKV_OCI_9` conflicts with the specified Oracle-managed encryption; `CKV_OCI_7` requests object events, but this native state backend has no event consumer. Private access, versioning and API-key checks remain active.
+
+## Resuming a partially failed user creation
+
+Identity-domain-backed tenancies require a primary email even though the provider schema labels it optional. Supply two distinct owner-controlled addresses in stage 4; each must be unique across tenancy users. Emails are contact data visible in Terraform inputs, outputs, state and plans, not credentials or GitHub secrets.
+
+After a failed apply, preserve `.bootstrap/root`, its state/backups, and the existing local key pairs. Re-run the updated wizard; Enter keeps existing values and stage 4 asks for the new emails. Stage 5 plans against the same partial state, so already-created resources are retained. Review that the plan creates only remaining resources before you approve another apply. Never delete state or start a fresh working directory to retry.

@@ -39,6 +39,7 @@ resource "oci_identity_user" "pipeline" {
   compartment_id = var.tenancy_ocid
   name           = each.value
   description    = "Terraform ${each.key} user; Bootstrap owned."
+  email          = var.pipeline_user_emails[each.key]
   defined_tags   = {}
   freeform_tags  = {}
 }
@@ -102,6 +103,7 @@ output "bootstrap_inputs" {
     state_bucket_name    = var.state_bucket_name
     state_namespace      = var.state_namespace
     pipeline_public_keys = var.pipeline_public_keys
+    pipeline_user_emails = var.pipeline_user_emails
     iam_exclusion_mode   = var.iam_exclusion_mode
   }
 }

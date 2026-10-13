@@ -5,7 +5,7 @@ import sys
 
 root, source = sys.argv[1:]
 events = [json.loads(line) for line in Path(source).read_text().splitlines()]
-plans = [event['test_plan'] for event in events if event.get('type') == 'test_plan' and event.get('@testrun') != 'private_keys_rejected']
+plans = [event['test_plan'] for event in events if event.get('type') == 'test_plan' and event.get('@testrun') not in ('private_keys_rejected', 'duplicate_primary_emails_rejected')]
 assert plans, 'Mocked Terraform test must emit a plan'
 for plan in plans:
     changes = plan.get('resource_changes', [])

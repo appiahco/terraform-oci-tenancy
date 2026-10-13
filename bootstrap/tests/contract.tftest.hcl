@@ -5,6 +5,7 @@ variables {
   region            = "us-ashburn-1"
   state_bucket_name = "fixture-state"
   state_namespace   = "fixture-namespace"
+  pipeline_user_emails = { apply = "apply@example.com", plan = "plan@example.com" }
   pipeline_public_keys = {
     apply = "-----BEGIN PUBLIC KEY-----\nfixture\n-----END PUBLIC KEY-----"
     plan  = "-----BEGIN PUBLIC KEY-----\nfixture\n-----END PUBLIC KEY-----"
@@ -75,4 +76,30 @@ run "ordinary_iam_operations_keep_access" {
     condition     = !strcontains(oci_identity_policy.pipeline["apply"].statements[0], "GROUP_CREATE") && !strcontains(oci_identity_policy.pipeline["apply"].statements[0], "POLICY_CREATE") && !strcontains(oci_identity_policy.pipeline["apply"].statements[0], "USER_UPDATE")
     error_message = "Do not require IAM target names on creation or unrelated user mutations."
   }
+}
+
+run "pipeline_users_have_distinct_primary_emails" {
+  command = plan
+  variables {
+    pipeline_user_emails = {
+      apply = "apply@example.com"
+      plan  = "plan@example.com"
+    }
+  }
+  assert {
+    condition = oci_identity_user.pipeline["apply"].email == "apply@example.com" && oci_identity_user.pipeline["plan"].email == "plan@example.com"
+    error_message = "Each pipeline user must receive its distinct primary email for identity-domain creation."
+  }
+  assert {
+    condition = output.bootstrap_inputs.pipeline_user_emails.apply == "apply@example.com" && output.bootstrap_inputs.pipeline_user_emails.plan == "plan@example.com"
+    error_message = "Later CI plans need the same primary emails from migrated state inputs."
+  }
+}
+
+run "duplicate_primary_emails_rejected" {
+  command = plan
+  variables {
+    pipeline_user_emails = { apply = "same@example.com", plan = "SAME@example.com" }
+  }
+  expect_failures = [var.pipeline_user_emails]
 }
