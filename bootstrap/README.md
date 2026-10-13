@@ -107,7 +107,7 @@ Daily `key-rotation.yml` runs on main at 14:00 UTC. It creates a distinct remind
 
 ## Verification and owner completion
 
-Local agent checks: mocked Terraform Root plans, plan-JSON ownership assertions, workflow fixtures, reminder tests, `bash -n`, executable mode and static value/secret tracing. ShellCheck uses `-e SC1087,SC2329` for two inherited template-library diagnostics (Readline prompt interpolation and unused library helpers); the library itself stays byte-identical. No interactive wizard execution, live backend initialization or authorization claim is part of agent verification.
+Local agent checks: mocked Terraform Root plans, plan-JSON ownership assertions, workflow fixtures, reminder tests, `bash -n`, executable mode and static value/secret tracing. ShellCheck uses `-e SC1087,SC2317,SC2329` for inherited template-library diagnostics (Readline prompt interpolation and unused library helpers reported as SC2317 in ShellCheck 0.9 or SC2329 in newer releases); the library itself stays byte-identical. No interactive wizard execution, live backend initialization or authorization claim is part of agent verification.
 
 Owner checklist (complete after merge):
 
@@ -122,3 +122,5 @@ Owner checklist (complete after merge):
 - [ ] Separate 90-day rotation baselines installed and reminder workflow verified.
 
 Do not close #24 based on script existence or mock success.
+
+Checkov exceptions are scoped to the state bucket: `CKV_OCI_9` conflicts with the specified Oracle-managed encryption; `CKV_OCI_7` requests object events, but this native state backend has no event consumer. Private access, versioning and API-key checks remain active.
