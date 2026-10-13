@@ -38,3 +38,14 @@ variable "iam_exclusion_mode" {
     error_message = "Choose name_conditions or deny."
   }
 }
+
+variable "pipeline_user_emails" {
+  description = "Distinct primary email addresses controlled by the owner; required by identity-domain-backed tenancies."
+  type        = object({ apply = string, plan = string })
+  validation {
+    condition = alltrue([for email in values(var.pipeline_user_emails) :
+      can(regex("^[^@[:space:]]+@[^@[:space:]]+\\.[^@[:space:]]+$", email))
+    ]) && lower(var.pipeline_user_emails.apply) != lower(var.pipeline_user_emails.plan)
+    error_message = "Provide two distinct, valid primary email addresses, one per pipeline user."
+  }
+}

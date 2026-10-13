@@ -223,7 +223,7 @@ gh() {
   fi
 }
 write_inputs() {
-  export TENANCY_OCID HOME_REGION STATE_BUCKET STATE_NAMESPACE IAM_EXCLUSION_MODE REPO_DIR WORK_DIR
+  export TENANCY_OCID HOME_REGION STATE_BUCKET STATE_NAMESPACE IAM_EXCLUSION_MODE REPO_DIR WORK_DIR APPLY_USER_EMAIL PLAN_USER_EMAIL
   python3 - <<'PY'
 import json, os
 from pathlib import Path
@@ -231,6 +231,7 @@ root = Path(os.environ['REPO_DIR'])
 values = dict(tenancy_ocid=os.environ['TENANCY_OCID'], region=os.environ['HOME_REGION'],
               state_bucket_name=os.environ['STATE_BUCKET'], state_namespace=os.environ['STATE_NAMESPACE'],
               iam_exclusion_mode=os.environ['IAM_EXCLUSION_MODE'],
+              pipeline_user_emails={'apply':os.environ['APPLY_USER_EMAIL'], 'plan':os.environ['PLAN_USER_EMAIL']},
               pipeline_public_keys={r:(root / '.bootstrap/keys' / f'{r}.public.pem').read_text() for r in ('apply','plan')})
 (Path(os.environ['WORK_DIR']) / 'owner.auto.tfvars.json').write_text(json.dumps(values, indent=2) + '\n')
 PY
@@ -309,6 +310,10 @@ STATE_NAMESPACE=$(oci os ns get --config-file "$OWNER_CONFIG" --profile "$OWNER_
 persist STATE_NAMESPACE
 ask STATE_BUCKET "New state bucket name (letters, digits, underscore, hyphen):"; persist STATE_BUCKET
 [[ "$STATE_BUCKET" =~ ^[A-Za-z0-9_-]+$ ]] || exit 1
+open_url "https://docs.oracle.com/en-us/iaas/tools/terraform-provider-oci/latest/docs/r/identity_user.html"
+step "Choose two distinct primary email addresses you control, not already assigned to other tenancy users."
+ask APPLY_USER_EMAIL "Apply user's primary email:"; persist APPLY_USER_EMAIL
+ask PLAN_USER_EMAIL "Plan user's primary email:"; persist PLAN_USER_EMAIL
 # Preserve the working mode, including an owner-applied fallback, on resume.
 if [[ -f "$WORK_DIR/owner.auto.tfvars.json" ]]; then
   IAM_EXCLUSION_MODE=$(python3 - "$WORK_DIR/owner.auto.tfvars.json" <<'PYMODE'
