@@ -1,10 +1,10 @@
 mock_provider "oci" {}
 
 variables {
-  tenancy_ocid      = "ocid1.tenancy.oc1..fixture"
-  region            = "us-ashburn-1"
-  state_bucket_name = "fixture-state"
-  state_namespace   = "fixture-namespace"
+  tenancy_ocid         = "ocid1.tenancy.oc1..fixture"
+  region               = "us-ashburn-1"
+  state_bucket_name    = "fixture-state"
+  state_namespace      = "fixture-namespace"
   pipeline_user_emails = { apply = "apply@example.com", plan = "plan@example.com" }
   pipeline_public_keys = {
     apply = "-----BEGIN PUBLIC KEY-----\nfixture\n-----END PUBLIC KEY-----"
@@ -87,11 +87,11 @@ run "pipeline_users_have_distinct_primary_emails" {
     }
   }
   assert {
-    condition = oci_identity_user.pipeline["apply"].email == "apply@example.com" && oci_identity_user.pipeline["plan"].email == "plan@example.com"
+    condition     = oci_identity_user.pipeline["apply"].email == "apply@example.com" && oci_identity_user.pipeline["plan"].email == "plan@example.com"
     error_message = "Each pipeline user must receive its distinct primary email for identity-domain creation."
   }
   assert {
-    condition = output.bootstrap_inputs.pipeline_user_emails.apply == "apply@example.com" && output.bootstrap_inputs.pipeline_user_emails.plan == "plan@example.com"
+    condition     = output.bootstrap_inputs.pipeline_user_emails.apply == "apply@example.com" && output.bootstrap_inputs.pipeline_user_emails.plan == "plan@example.com"
     error_message = "Later CI plans need the same primary emails from migrated state inputs."
   }
 }
