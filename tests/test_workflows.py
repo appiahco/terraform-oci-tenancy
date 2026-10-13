@@ -23,6 +23,12 @@ class WorkflowTests(unittest.TestCase):
 
 
 class CredentialTests(unittest.TestCase):
+    def test_plan_comment_permission_crosses_reusable_workflow_boundary(self):
+        caller = yaml.safe_load((REPO / '.github/workflows/pr.yml').read_text())['jobs']['plan']
+        called = yaml.safe_load((REPO / '.github/workflows/_terraform.yml').read_text())['jobs']['plan']
+        for job in (caller, called):
+            self.assertEqual(job['permissions'], {'contents': 'read', 'pull-requests': 'write'})
+
     def test_plan_environment_secrets_cross_reusable_workflow_boundary(self):
         caller = yaml.safe_load((REPO / '.github/workflows/pr.yml').read_text())['jobs']['plan']
         called = yaml.safe_load((REPO / '.github/workflows/_terraform.yml').read_text())

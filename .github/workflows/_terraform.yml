@@ -61,7 +61,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      issues: write
+      pull-requests: write
     concurrency:
       group: terraform-${{ inputs.root }}-pr-${{ github.event.pull_request.number }}
       cancel-in-progress: true
