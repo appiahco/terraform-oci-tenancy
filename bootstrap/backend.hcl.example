@@ -1,0 +1,3 @@
+bucket = "REPLACE_AFTER_BOOTSTRAP"
+namespace = "REPLACE_WITH_TENANCY_NAMESPACE"
+key = "bootstrap/terraform.tfstate"

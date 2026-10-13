@@ -1,0 +1,110 @@
+name: Pull request
+on:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  detect:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.roots.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Changed paths (including both sides of renames)
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          git diff --no-renames --name-only -z "$BASE...$HEAD" > /tmp/changed-paths
+          python3 -c 'import json; from pathlib import Path; print(json.dumps(Path("/tmp/changed-paths").read_text().strip("\0").split("\0")))' > /tmp/paths.json
+      - id: roots
+        run: python3 scripts/ci.py detect /tmp/paths.json
+  fmt:
+    name: terraform fmt
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - id: version
+        run: echo "version=$(cat .terraform-version)" >> "$GITHUB_OUTPUT"
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ steps.version.outputs.version }}
+          terraform_wrapper: false
+      - run: python3 scripts/ci.py static fmt
+  validate:
+    name: terraform validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - id: version
+        run: echo "version=$(cat .terraform-version)" >> "$GITHUB_OUTPUT"
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ steps.version.outputs.version }}
+          terraform_wrapper: false
+      - run: python3 scripts/ci.py static validate
+  tflint:
+    name: tflint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: terraform-linters/setup-tflint@v4
+        with:
+          tflint_version: v0.61.0
+      - run: tflint --init
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+      - run: python3 scripts/ci.py static tflint
+  fixtures:
+    name: workflow fixtures
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python3 -m pip install -r tests/requirements.txt
+      - run: python3 -m unittest discover -s tests -v
+      - run: node --test tests/plan-comment.test.mjs
+  checkov:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: bridgecrewio/checkov-action@v12
+        with:
+          directory: .
+          framework: terraform
+  trivy:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aquasecurity/trivy-action@0.35.0
+        with:
+          scan-type: config
+          scan-ref: .
+          exit-code: '1'
+  plan:
+    needs: [detect, fmt, validate, tflint, fixtures]
+    if: >-
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      needs.detect.outputs.matrix != '{"root": []}'
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.detect.outputs.matrix) }}
+    uses: ./.github/workflows/_terraform.yml
+    permissions:
+      contents: read
+      issues: write
+    with:
+      root: ${{ matrix.root }}
+      mode: plan
+    secrets:
+      OCI_TENANCY_OCID: ${{ secrets.OCI_PLAN_TENANCY_OCID }}
+      OCI_USER_OCID: ${{ secrets.OCI_PLAN_USER_OCID }}
+      OCI_FINGERPRINT: ${{ secrets.OCI_PLAN_FINGERPRINT }}
+      OCI_PRIVATE_KEY: ${{ secrets.OCI_PLAN_PRIVATE_KEY }}
+      OCI_REGION: ${{ secrets.OCI_PLAN_REGION }}
