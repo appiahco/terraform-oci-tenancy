@@ -60,7 +60,7 @@ The compartment where changes are rehearsed before they reach Production.
 _Avoid_: dev, nonprod, test
 
 **Bootstrap compartment**:
-The compartment owned by Bootstrap holding only the pipeline's state; the CI user cannot touch anything else in it.
+The compartment owned by Bootstrap holding only the pipeline's state; the Apply user cannot touch anything else in it.
 _Avoid_: state compartment
 
 **Edge compartment**:
