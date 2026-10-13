@@ -47,10 +47,9 @@ jobs:
           OCI_FINGERPRINT: ${{ secrets.OCI_FINGERPRINT }}
           OCI_PRIVATE_KEY: ${{ secrets.OCI_PRIVATE_KEY }}
           OCI_REGION: ${{ secrets.OCI_REGION }}
+          TF_STATE_BUCKET: ${{ vars.TF_STATE_BUCKET }}
+          TF_STATE_NAMESPACE: ${{ vars.TF_STATE_NAMESPACE }}
         run: python3 scripts/ci.py credentials
-      - name: Explain missing credentials
-        if: steps.credentials.outputs.available != 'true'
-        run: echo 'Plan skipped because Plan user credentials are not configured.' >> "$GITHUB_STEP_SUMMARY"
   plan:
     environment: plan
     needs: preflight
