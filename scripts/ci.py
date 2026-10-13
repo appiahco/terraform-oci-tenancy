@@ -8,6 +8,9 @@ import tempfile
 
 ROOTS = ('bootstrap', 'foundation', 'workloads')
 CREDENTIALS = ('OCI_TENANCY_OCID', 'OCI_USER_OCID', 'OCI_FINGERPRINT', 'OCI_PRIVATE_KEY', 'OCI_REGION')
+# The owner wizard installs these repository variables last, after every Environment's
+# credentials, so their presence marks setup as complete (see README "PR plan contract").
+STATE_VARIABLES = ('TF_STATE_BUCKET', 'TF_STATE_NAMESPACE')
 
 
 def output(name, value):
@@ -15,6 +18,35 @@ def output(name, value):
         with open(os.environ['GITHUB_OUTPUT'], 'a') as stream:
             stream.write(f'{name}={value}\n')
     print(value)
+
+
+def summary(*lines):
+    if os.getenv('GITHUB_STEP_SUMMARY'):
+        with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as stream:
+            stream.write('\n'.join(lines) + '\n')
+
+
+def credentials():
+    """Decide whether the live plan may run; report names only, never values."""
+    missing = [key for key in CREDENTIALS + STATE_VARIABLES if not os.getenv(key, '').strip()]
+    if not missing:
+        output('available', 'true')
+        return
+    if all(key in missing for key in STATE_VARIABLES):
+        output('available', 'false')
+        summary('### Live plan skipped: initial setup not complete',
+                'Plan credentials and backend variables are not configured, so **no live plan ran** and',
+                'infrastructure is **not verified** by this run. Static checks are the only evidence.',
+                'Missing: ' + ', '.join(f'`{key}`' for key in missing))
+        return
+    names = ', '.join(missing)
+    print(f'::error title=Plan setup incomplete::Setup is complete but required inputs are missing or empty: {names}', file=sys.stderr)
+    summary('### Live plan failed: required input missing or empty',
+            'Setup is complete (backend variables exist), so every Plan credential and backend variable is required.',
+            'Missing or empty: ' + ', '.join(f'`{key}`' for key in missing),
+            'Restore them in the `plan` Environment (secrets) or repository variables, then re-run.')
+    output('available', 'false')
+    sys.exit(1)
 
 
 def main():
@@ -26,8 +58,7 @@ def main():
         roots = [r for r in ROOTS if shared or any(p.startswith(r + '/') for p in paths)]
         output('matrix', json.dumps({'root': roots}))
     elif command == 'credentials':
-        available = all(os.getenv(key, '').strip() for key in CREDENTIALS)
-        output('available', str(available).lower())
+        credentials()
     elif command == 'static':
         gate = sys.argv[2]
         if gate == 'fmt':

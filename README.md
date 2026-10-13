@@ -31,7 +31,19 @@ Workflow fixtures execute the workflow's detection and preflight commands, evalu
 
 `_terraform.yml` accepts `root` (`bootstrap`, `foundation`, `workloads`) and `mode` (`plan`, `apply`). This implementation accepts plan execution; apply is reserved and fails before invoking Terraform. There is no CI apply command.
 
-The reusable workflow binds its preflight and plan jobs to the `plan` Environment, whose `OCI_TENANCY_OCID`, `OCI_USER_OCID`, `OCI_FINGERPRINT`, `OCI_PRIVATE_KEY` (PEM content), and `OCI_REGION` secrets supply the Plan identity. No secrets are inherited from the caller. Missing or partial credentials cause the actual plan job to skip successfully while static checks still run. Fork PRs never invoke the reusable workflow. The owner provisions GitHub settings and credentials after merge using the Bootstrap runbook. Apply/Drift workflows remain subsequent work.
+The reusable workflow binds its preflight and plan jobs to the `plan` Environment, whose `OCI_TENANCY_OCID`, `OCI_USER_OCID`, `OCI_FINGERPRINT`, `OCI_PRIVATE_KEY` (PEM content), and `OCI_REGION` secrets supply the Plan identity. No secrets are inherited from the caller. Fork PRs never invoke the reusable workflow and receive no credentials; static checks still run for them.
+
+### Unconfigured versus configured setup
+
+CI treats setup as **complete** once the repository variables `TF_STATE_BUCKET` or `TF_STATE_NAMESPACE` exist: the owner wizard installs them only after the Plan and Apply credentials. The `credentials` preflight (`scripts/ci.py credentials`) then decides:
+
+| State | Condition | Result |
+| --- | --- | --- |
+| Initial setup | Neither state variable is non-empty | Preflight passes with `available=false`; the live plan is skipped and the job summary says no live plan ran and infrastructure is **not verified**. |
+| Setup complete | A state variable is non-empty and all five `OCI_*` secrets and both state variables are non-empty | `available=true`; the plan runs. |
+| Setup complete, input missing or empty | A state variable is non-empty but any of the seven inputs is missing, empty or whitespace | The preflight **fails** with one `::error` annotation and a job summary naming the inputs. Only names are printed, never values. |
+
+A green run with a skipped live plan therefore only occurs during initial setup, and its summary says so. To return to initial setup deliberately, delete both state variables. The owner provisions GitHub settings and credentials after merge using the Bootstrap runbook. Apply/Drift workflows remain subsequent work.
 
 When credentials exist, the state bucket and namespace come from repository variables `TF_STATE_BUCKET` and `TF_STATE_NAMESPACE`. The Root backend supplies its own key; only bucket and namespace are passed with `-backend-config`. The plan entry point exports matching `OCI_<lowercase attribute>` aliases because Terraform 1.16’s native OCI backend reads those names. No backend credentials are stored in HCL. `backend.hcl.example` documents the three non-secret properties. Plans use `-lock=false` and cancel older runs for the same Root and PR. Each Root has a sticky comment with change and replacement counts, warnings, collapsed escaped text, and a run-log link above 60,000 characters. Always Free advisory content is reserved for its own ticket.
 
