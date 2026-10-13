@@ -41,6 +41,10 @@ _Avoid_: CI user, service account, bot
 The dedicated OCI user whose API key pull-request plans use; it can read the tenancy but never change it.
 _Avoid_: read-only user, plan bot
 
+**Workload identity**:
+The identity a workload uses to call OCI, declared in Workloads alongside that workload.
+_Avoid_: service account, instance user
+
 ### Compartments
 
 **Platform**:
