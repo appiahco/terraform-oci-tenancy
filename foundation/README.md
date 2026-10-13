@@ -11,8 +11,9 @@ domain policies remain unmanaged.
 `environment_compartment_ids` and `edge_compartment_ids` are the authoritative
 outputs for Workloads. Foundation requires only `tenancy_ocid`, supplied by CI
 from `OCI_TENANCY_OCID`; its first deployment reads no Foundation remote state.
-Networking, budgets, Cloud Guard configuration/logging and Drift are separate
-issues (#28, #26, #27 and #31).
+Networking, budgets, the remaining Cloud Guard configuration/logging and Drift
+are separate issues (#28, #26, #27 and #31). Foundation owns only the tenancy-level
+Cloud Guard enablement required by its Security Zone.
 
 ## Tags
 
@@ -51,12 +52,19 @@ Production's Security Zone only and must be reviewed before a Production databas
 If a Vault is introduced, restore all four Vault-key policies through a reviewed
 PR and revisit the Plan user's `read all-resources` grant for Vault access.
 
-**Deployment prerequisite:** OCI requires Cloud Guard to be enabled before a
-Security Zone can be created. A Plan-user read on 2026-10-13 found it disabled.
-Cloud Guard configuration remains in #27. Complete that prerequisite through its
-reviewed PR before approving this Foundation deployment. This PR does not enable
-Cloud Guard or create its IAM policies, detector/responder recipes or logging.
-Oracle automatically creates the Security Zone's target when the zone is created.
+**Cloud Guard prerequisite:** a Plan-user read on 2026-10-13 found Cloud Guard
+disabled. Foundation declares only tenancy-level enablement at the Tenancy root,
+with reporting region `us-ashburn-1`, status `ENABLED` and
+`self_manage_resources = false`. Production's Security Zone explicitly depends
+on that configuration so the same reviewed apply enables Cloud Guard before
+creating the zone. This breaks the #25/#27 compartment dependency cycle.
+Cloud Guard configuration has no tagging fields in provider 9.9.0.
+
+All remaining #27 work stays separate: Foundation declares no detector recipe
+clones, targets, responders or logging for this prerequisite. Oracle automatically
+creates the Security Zone's target when the zone is created. The enablement is a
+tenancy-wide service setting; removing the configuration resource can disable
+Cloud Guard across the Tenancy and must be reviewed with that scope in mind.
 
 Provider 9.9.0 has no child-compartment exclusion resource. The plan therefore
 includes `terraform_data.production_edge_exclusion`, a create-time adapter using

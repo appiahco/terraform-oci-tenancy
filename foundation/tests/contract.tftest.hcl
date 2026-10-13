@@ -49,6 +49,10 @@ variables {
 run "governed_foundation" {
   command = plan
   assert {
+    condition     = oci_cloud_guard_cloud_guard_configuration.tenancy.compartment_id == var.tenancy_ocid && oci_cloud_guard_cloud_guard_configuration.tenancy.reporting_region == "us-ashburn-1" && oci_cloud_guard_cloud_guard_configuration.tenancy.status == "ENABLED" && !oci_cloud_guard_cloud_guard_configuration.tenancy.self_manage_resources
+    error_message = "Enable Cloud Guard at the Tenancy root in the home region without self-managed resources."
+  }
+  assert {
     condition     = output.root_contract.root == "foundation" && output.root_contract.state_key == "foundation/terraform.tfstate"
     error_message = "Root must own its independent state key."
   }

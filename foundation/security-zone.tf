@@ -1,3 +1,12 @@
+# Tenancy-wide exception: Cloud Guard enablement is required before any Security
+# Zone can be created. All detector/target/responder configuration remains in #27.
+resource "oci_cloud_guard_cloud_guard_configuration" "tenancy" {
+  compartment_id        = var.tenancy_ocid
+  reporting_region      = "us-ashburn-1"
+  status                = "ENABLED"
+  self_manage_resources = false
+}
+
 locals {
   # Reviewed allowlist: resolve names to OCIDs, never adopt the catalogue wholesale.
   production_policy_names = jsondecode(file("${path.module}/security-policy-names.json"))
@@ -25,6 +34,7 @@ resource "oci_cloud_guard_security_zone" "production" {
   description             = "Production protection; its Edge compartment is excluded."
   security_zone_recipe_id = oci_cloud_guard_security_recipe.production.id
   defined_tags            = local.environment_tags["production"]
+  depends_on              = [oci_cloud_guard_cloud_guard_configuration.tenancy]
 }
 
 # OCI provider 9.9.0 has no remove-compartment resource. Keep the API operation in

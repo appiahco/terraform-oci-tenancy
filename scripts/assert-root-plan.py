@@ -2,6 +2,9 @@
 import json
 from pathlib import Path
 import sys
+import subprocess
+import re
+import tempfile
 
 root, source = sys.argv[1:]
 events = [json.loads(line) for line in Path(source).read_text().splitlines()]
@@ -30,7 +33,7 @@ for plan in plans:
             'oci_identity_compartment': 5, 'oci_identity_tag_namespace': 1,
             'oci_identity_tag': 2, 'oci_identity_tag_default': 6,
             'oci_cloud_guard_security_recipe': 1, 'oci_cloud_guard_security_zone': 1,
-            'terraform_data': 1,
+            'terraform_data': 1, 'oci_cloud_guard_cloud_guard_configuration': 1,
         }, 'Foundation may own only governed structure and its Security Zone'
         resources = {c['address']: c['change']['after'] for c in changes}
         for change in changes:
@@ -41,6 +44,31 @@ for plan in plans:
             if change['type'] == 'oci_identity_tag_default':
                 assert after['is_required'] is False
                 assert after['compartment_id'] in ('fixture-platform', 'fixture-production', 'fixture-staging'), 'Defaults attach to environments, not Tenancy or Bootstrap'
+        enablement = resources['oci_cloud_guard_cloud_guard_configuration.tenancy']
+        assert enablement['compartment_id'] == 'ocid1.tenancy.oc1..fixture'
+        assert enablement['reporting_region'] == 'us-ashburn-1'
+        assert enablement['status'] == 'ENABLED' and enablement['self_manage_resources'] is False
+        # Graph generation otherwise requires a live backend initialization.
+        # Copy the checked-in configuration unchanged except for the backend;
+        # reuse installed providers and keep the adapter hash path available.
+        with tempfile.TemporaryDirectory() as tmp:
+            directory = Path(tmp) / 'foundation'
+            directory.mkdir()
+            for source_file in Path('foundation').glob('*.tf'):
+                configuration = source_file.read_text()
+                if source_file.name == 'main.tf':
+                    configuration, removed = re.subn(r'  backend "oci" \{[^}]*\}', '', configuration)
+                    assert removed == 1, 'Expected exactly one Foundation backend'
+                (directory / source_file.name).write_text(configuration)
+            for name in ('security-policy-names.json', '.terraform.lock.hcl'):
+                (directory / name).write_bytes((Path('foundation') / name).read_bytes())
+            (directory / '.terraform').mkdir()
+            (directory / '.terraform/providers').symlink_to(Path('foundation/.terraform/providers').resolve())
+            (Path(tmp) / 'scripts').symlink_to(Path('scripts').resolve())
+            graph = subprocess.run(['terraform', f'-chdir={directory}', 'graph', '-type=plan'],
+                                   check=True, capture_output=True, text=True).stdout
+        dependency = '"[root] oci_cloud_guard_security_zone.production (expand)" -> "[root] oci_cloud_guard_cloud_guard_configuration.tenancy (expand)"'
+        assert dependency in graph, 'Production Security Zone must explicitly depend on Cloud Guard enablement'
         zone = resources['oci_cloud_guard_security_zone.production']
         assert zone['compartment_id'] == 'fixture-production' and zone['security_zone_recipe_id'] == 'fixture-recipe'
         exclusion = resources['terraform_data.production_edge_exclusion']['input']
