@@ -39,7 +39,7 @@ jobs:
         run: |
           case "$ROOT" in bootstrap|foundation|workloads) ;; *) exit 1;; esac
           case "$MODE" in plan|apply) ;; *) exit 1;; esac
-          if [ "$MODE" = apply ]; then echo 'Apply is reserved for #25'; exit 1; fi
+          [ "$MODE" = plan ]
       - id: credentials
         env:
           OCI_TENANCY_OCID: ${{ secrets.OCI_TENANCY_OCID }}
@@ -96,3 +96,54 @@ jobs:
             await updateComment({ github, context, root,
               plan: JSON.parse(await readFile(`${root}/plan.json`, 'utf8')),
               text: await readFile(`${root}/plan.txt`, 'utf8') });
+  apply:
+    environment: ${{ format('apply-{0}', inputs.root) }}
+    if: >-
+      inputs.mode == 'apply' &&
+      inputs.root != 'bootstrap' &&
+      (inputs.root == 'foundation' || inputs.root == 'workloads') &&
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    concurrency:
+      # Drift (#31) must use these exact per-Root groups for all Reverts.
+      group: terraform-${{ inputs.root }}-apply
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate Apply credentials
+        env:
+          MODE: apply
+          ROOT: ${{ inputs.root }}
+          TF_STATE_BUCKET: ${{ vars.TF_STATE_BUCKET }}
+          TF_STATE_NAMESPACE: ${{ vars.TF_STATE_NAMESPACE }}
+          OCI_TENANCY_OCID: ${{ secrets.OCI_TENANCY_OCID }}
+          OCI_USER_OCID: ${{ secrets.OCI_USER_OCID }}
+          OCI_FINGERPRINT: ${{ secrets.OCI_FINGERPRINT }}
+          OCI_PRIVATE_KEY: ${{ secrets.OCI_PRIVATE_KEY }}
+          OCI_REGION: ${{ secrets.OCI_REGION }}
+        run: python3 scripts/ci.py credentials
+      - id: version
+        run: echo "version=$(cat .terraform-version)" >> "$GITHUB_OUTPUT"
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ steps.version.outputs.version }}
+          terraform_wrapper: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install Security Zone exclusion adapter dependency
+        if: inputs.root == 'foundation'
+        run: python3 -m pip install oci-cli==3.94.2
+      - name: Re-plan and apply with the Apply user
+        env:
+          ROOT: ${{ inputs.root }}
+          MODE: ${{ inputs.mode }}
+          TF_STATE_BUCKET: ${{ vars.TF_STATE_BUCKET }}
+          TF_STATE_NAMESPACE: ${{ vars.TF_STATE_NAMESPACE }}
+          OCI_TENANCY_OCID: ${{ secrets.OCI_TENANCY_OCID }}
+          OCI_USER_OCID: ${{ secrets.OCI_USER_OCID }}
+          OCI_FINGERPRINT: ${{ secrets.OCI_FINGERPRINT }}
+          OCI_PRIVATE_KEY: ${{ secrets.OCI_PRIVATE_KEY }}
+          OCI_REGION: ${{ secrets.OCI_REGION }}
+        run: bash scripts/plan.sh "$ROOT" "$MODE"

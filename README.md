@@ -52,3 +52,5 @@ When credentials exist, the state bucket and namespace come from repository vari
 State storage and Plan user credentials do not exist yet; backend examples are placeholders. Follow [Bootstrap setup](bootstrap/README.md) for owner provisioning, local-to-OCI migration and permission evidence. Do not initialize against a live backend until that work is complete.
 
 Foundation and Workloads initialization must not assume deployed Foundation outputs exist before the first Foundation apply. These minimal Roots declare no remote-state dependency. When Workloads begins consuming Foundation outputs, introduce that dependency only after Foundation has produced them, or gate it explicitly for first use. Never invent subnet, NSG, or compartment IDs to satisfy initialization.
+
+Foundation governance and the reviewed merge path are documented in [foundation/README.md](foundation/README.md).
