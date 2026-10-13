@@ -7,3 +7,5 @@
 __pycache__/
 plan.json
 plan.txt
+.bootstrap/
+*.tfvars.json

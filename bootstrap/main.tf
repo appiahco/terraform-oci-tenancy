@@ -6,17 +6,13 @@ terraform {
       version = "= 9.9.0"
     }
   }
-  # Supply bucket and namespace only once Bootstrap has provisioned state storage.
-  backend "oci" {
-    key = "bootstrap/terraform.tfstate"
-  }
 }
 
 provider "oci" {
+  region              = var.region
   ignore_defined_tags = ["Oracle-Tags.CreatedBy", "Oracle-Tags.CreatedOn"]
 }
 
-# Execution contract only: infrastructure is delivered in subsequent tickets.
 output "root_contract" {
   description = "Exclusive ownership boundary; not a dependency on deployed outputs."
   value = {

@@ -1,0 +1,28 @@
+name: Pipeline key rotation reminders
+on:
+  schedule:
+    - cron: '0 14 * * *'
+  workflow_dispatch:
+permissions:
+  contents: read
+  issues: write
+concurrency:
+  group: pipeline-key-rotation-reminders
+  cancel-in-progress: false
+jobs:
+  remind:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/github-script@v7
+        env:
+          OCI_APPLY_ROTATED_ON: ${{ vars.OCI_APPLY_ROTATED_ON }}
+          OCI_PLAN_ROTATED_ON: ${{ vars.OCI_PLAN_ROTATED_ON }}
+        with:
+          script: |
+            const { createReminders } = await import(`${process.env.GITHUB_WORKSPACE}/scripts/key-rotation.mjs`);
+            await createReminders({github, context, dates: {
+              apply: process.env.OCI_APPLY_ROTATED_ON,
+              plan: process.env.OCI_PLAN_ROTATED_ON
+            }});
