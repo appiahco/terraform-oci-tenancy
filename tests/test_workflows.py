@@ -23,6 +23,16 @@ class WorkflowTests(unittest.TestCase):
 
 
 class CredentialTests(unittest.TestCase):
+    def test_plan_environment_secrets_cross_reusable_workflow_boundary(self):
+        caller = yaml.safe_load((REPO / '.github/workflows/pr.yml').read_text())['jobs']['plan']
+        called = yaml.safe_load((REPO / '.github/workflows/_terraform.yml').read_text())
+        keys = ['OCI_TENANCY_OCID', 'OCI_USER_OCID', 'OCI_FINGERPRINT', 'OCI_PRIVATE_KEY', 'OCI_REGION']
+        # GitHub resolves Environment secrets to empty strings unless the caller
+        # passes their names, even when the called job selects the Environment.
+        self.assertEqual(caller.get('secrets'), {key: '${{ secrets.' + key + ' }}' for key in keys})
+        for job in ('preflight', 'plan'):
+            self.assertEqual(called['jobs'][job]['environment'], 'plan')
+
     def test_credential_preflight_entry_point(self):
         keys = ['OCI_TENANCY_OCID', 'OCI_USER_OCID', 'OCI_FINGERPRINT', 'OCI_PRIVATE_KEY', 'OCI_REGION']
         base = {k: v for k, v in os.environ.items() if not k.startswith('OCI_')}

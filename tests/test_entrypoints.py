@@ -48,7 +48,6 @@ class EntryPointTests(unittest.TestCase):
             self.assertNotIn('if', jobs[gate])
             self.assertNotIn('secrets', jobs[gate])
         self.assertNotIn('secrets', jobs['plan'].get('env', {}))
-        self.assertNotIn('secrets', jobs['plan'])
         self.assertEqual(TF['jobs']['preflight']['environment'], 'plan')
         self.assertEqual(TF['jobs']['plan']['environment'], 'plan')
         github = {'repository': 'owner/repo', 'event_name': 'pull_request', 'event': {'pull_request': {'head': {'repo': {'full_name': 'fork/repo'}}}}}
