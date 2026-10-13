@@ -18,6 +18,8 @@ resource "oci_identity_compartment" "bootstrap" {
 }
 
 resource "oci_objectstorage_bucket" "state" {
+  # checkov:skip=CKV_OCI_9:Ticket #24 requires Oracle-managed encryption, not a customer-managed key.
+  # checkov:skip=CKV_OCI_7:Native Terraform state locking uses conditional writes; this bucket has no object-event consumer.
   compartment_id = oci_identity_compartment.bootstrap.id
   namespace      = var.state_namespace
   name           = var.state_bucket_name
