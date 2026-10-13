@@ -25,8 +25,7 @@ def condition(expression, **values):
 
 class EntryPointTests(unittest.TestCase):
     def test_root_matrix_from_workflow_step(self):
-        step = PR['jobs']['detect']['steps'][-1]
-        self.assertEqual(step['id'], 'roots')
+        step = next(s for s in PR['jobs']['detect']['steps'] if s.get('id') == 'roots')
         with tempfile.TemporaryDirectory() as tmp:
             source = Path(tmp) / 'paths.json'
             output = Path(tmp) / 'output'

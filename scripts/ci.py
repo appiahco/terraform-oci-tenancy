@@ -9,7 +9,8 @@ import tempfile
 ROOTS = ('bootstrap', 'foundation', 'workloads')
 CREDENTIALS = ('OCI_TENANCY_OCID', 'OCI_USER_OCID', 'OCI_FINGERPRINT', 'OCI_PRIVATE_KEY', 'OCI_REGION')
 # The owner wizard installs these repository variables last, after every Environment's
-# credentials, so their presence marks setup as complete (see README "PR plan contract").
+# credentials. Setup counts as complete once either is set, or once every credential is
+# present (see README "Unconfigured versus configured setup").
 STATE_VARIABLES = ('TF_STATE_BUCKET', 'TF_STATE_NAMESPACE')
 
 
@@ -32,7 +33,7 @@ def credentials():
     if not missing:
         output('available', 'true')
         return
-    if all(key in missing for key in STATE_VARIABLES):
+    if all(key in missing for key in STATE_VARIABLES) and any(key in missing for key in CREDENTIALS):
         output('available', 'false')
         summary('### Live plan skipped: initial setup not complete',
                 'Plan credentials and backend variables are not configured, so **no live plan ran** and',
@@ -42,7 +43,7 @@ def credentials():
     names = ', '.join(missing)
     print(f'::error title=Plan setup incomplete::Setup is complete but required inputs are missing or empty: {names}', file=sys.stderr)
     summary('### Live plan failed: required input missing or empty',
-            'Setup is complete (backend variables exist), so every Plan credential and backend variable is required.',
+            'Setup is complete (backend variables or all credentials exist), so every Plan credential and backend variable is required.',
             'Missing or empty: ' + ', '.join(f'`{key}`' for key in missing),
             'Restore them in the `plan` Environment (secrets) or repository variables, then re-run.')
     output('available', 'false')

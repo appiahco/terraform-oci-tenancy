@@ -21,6 +21,18 @@ jobs:
           python3 -c 'import json; from pathlib import Path; print(json.dumps(Path("/tmp/changed-paths").read_text().strip("\0").split("\0")))' > /tmp/paths.json
       - id: roots
         run: python3 scripts/ci.py detect /tmp/paths.json
+      - name: Explain live plan scope
+        env:
+          FORK: ${{ github.event.pull_request.head.repo.full_name != github.repository }}
+          MATRIX: ${{ steps.roots.outputs.matrix }}
+        run: |
+          if [ "$FORK" = true ]; then
+            echo '### No live plan: fork pull request' >> "$GITHUB_STEP_SUMMARY"
+            echo 'Forks receive no credentials, so no live plan ran. Infrastructure is not verified by this run; static checks only.' >> "$GITHUB_STEP_SUMMARY"
+          elif [ "$MATRIX" = '{"root": []}' ]; then
+            echo '### No live plan: no Root affected' >> "$GITHUB_STEP_SUMMARY"
+            echo 'No Root changed, so no live plan was needed or run.' >> "$GITHUB_STEP_SUMMARY"
+          fi
   fmt:
     name: terraform fmt
     runs-on: ubuntu-latest
